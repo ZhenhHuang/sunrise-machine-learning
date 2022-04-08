@@ -10,4 +10,6 @@ open --> [deeplearing](./deeplearning/)
 
 ### 3-24 GaussianProcessRegression
 
-open --> [GaussianProcessRegression](./gaussian_process/GaussianProcessRegression.md)
+open --> [GaussianProcessRegression](./gaussian_process/GaussianProcessRegression.md) 
+
+试一下
