@@ -93,7 +93,7 @@ def loadDataSet(path):
 
 
 if __name__ == '__main__':
-    dataSet, label = loadDataSet('datingTestSet.txt')
+    dataSet, label = loadDataSet('./data/datingTestSet.txt')
     knn = KNN(dataSet, label)
     best_k, errorList = knn.ChooseK()
     rate = knn.predict()
