@@ -3,53 +3,53 @@ from linear_model_for_classification.label_encoder import one_hot_decoder
 
 
 class KMeans:
-    def __init__(self, classes: int = 2):
-        self.classes = classes
+    def __init__(self, n_classes):
+        self.n_classes = n_classes
         self.iter_means = []
-        self.iter_classes = []
-
-    def fit(self, X, iters=20, one_hot=False):
+        self.iter_result = []
+    
+    def fit(self, X, iters=20):
         n = X.shape[0]
-        means = X[np.random.choice(np.arange(n), self.classes)]     # init randomly
-        self.iter_means.append(means)
-        for epoch in range(iters):
-            R = np.zeros((n, self.classes))
-            for i in range(n):
-                # min_dist = np.inf
-                # for k in range(self.classes):
-                #     distance = self.dist(X[i], means[k])
-                #     if distance <= min_dist:
-                #         min_dist = distance
-                #         index = k
-                dist = self.dist(X[i], means)
-                index = dist.argmax(axis=-1)
-                R[i, index] = 1
-            tmp = np.einsum('ij,ik->jk', R, X) / (np.sum(R, axis=0)[:, None] + 1e-4)
-            # early stop
-            if np.allclose(tmp, means):
-                break
-            means = tmp
+        means = X[np.random.choice(n, self.n_classes)]
+        for _ in range(iters):
             self.iter_means.append(means)
-            self.iter_classes.append(R)
-        self.means = means
-        if one_hot:
-            return R, means
-        else:
-            return one_hot_decoder(R), means
-
+            self.means = means
+            response = np.zeros((n, self.n_classes))
+            dist = self.dist(X)
+            for i in range(n):
+                index = np.argmin(dist[i], axis=-1)
+                response[i, index] = 1
+            
+            self.iter_result.append(response)
+            means = np.einsum('nk,nd->kd', response, X) / (response.sum(0)[:, None] + 1e-4)
+            if np.allclose(self.means, means):
+                break
+        return means, one_hot_decoder(response)
+    
     def predict(self, x):
-        dist = self.dist(x, self.means)
-        return dist.argmax(axis=-1)
-
-    def dist(self, x, y):
-        if x.ndim == 1:
-            x = x[None, :]
-        return np.sum((x[:, None, :]-y[None, :, :])**2, axis=-1)
+        dist = self.dist(x)
+        return dist.argmin(-1)
+    
+    def dist(self, x):
+        dist = ((x[:, None, :] - self.means[None, :, :]) ** 2).sum(-1)        
+        return dist
 
 
 if __name__ == '__main__':
-    from sklearn.datasets import make_blobs
+    X, y, true_centers = make_blobs(n_samples=150, centers=3, n_features=2, random_state=0, return_centers=True)
+    plt.scatter(X[:, 0], X[:, 1])
+    plt.show()
+    
+    model = KMeans(n_classes=3)
+    means, results = model.fit(X)
 
-    X, y, true_centers = make_blobs(n_samples=100, centers=3, n_features=2, random_state=0, return_centers=True)
-    model = KMeans(classes=3)
-    results, centers = model.fit(X, iters=20)
+    a, b = np.meshgrid(np.linspace(-4, 5, 100), np.linspace(-2, 7, 100))
+    meshgrid = np.concatenate([a.reshape(1, -1), b.reshape(1, -1)], axis=0).T
+    z = model.predict(meshgrid)
+    
+    plt.scatter(X[:, 0], X[:, 1], c=y)
+    plt.scatter(means[:, 0], means[:, 1], marker='x', alpha=1., c='r', label='means', linewidths=3)
+    plt.scatter(true_centers[:, 0], true_centers[:, 1], marker='x', alpha=1, c='blue', label='true')
+    plt.contour(a, b, model.dist(meshgrid).min(-1).reshape(100, -1), colors=('g', 'r', 'y', 'orange'))
+    plt.legend()
+    plt.show()
