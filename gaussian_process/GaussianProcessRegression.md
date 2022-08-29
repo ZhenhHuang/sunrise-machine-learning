@@ -95,16 +95,15 @@ $设(A+BCD)X=I$，其中$I$为单位矩阵
 
 ，则可得
 $$
-
 \begin{cases}
     AX+BY=I\dots\dots(7)\\
     Y=BCX\dots\dots(8)
 \end{cases}
 $$
 由$(7)$可得$X=A^{-1}(b-BY)$，并带入$(8)$整理得
-$$Y=(I+CDA^{-1}B)^{-1}CDA^{-1}$$
+$Y=(I+CDA^{-1}B)^{-1}CDA^{-1}$
 回代得到
-$$X=A^{-1}-A^{-1}B(I+CDA^{-1}B)^{-1}CDA^{-1}$$
+$X=A^{-1}-A^{-1}B(I+CDA^{-1}B)^{-1}CDA^{-1}$
 
 ### 2.2 多元高斯分布
 
