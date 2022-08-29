@@ -54,7 +54,10 @@ $$
     CX+DY=Q\dots\dots(2)
 \end{cases}
 $$
-由$(2)$可得，$$Y=D^{-1}(Q-CX)\dots\dots(3)$$
+由$(2)$可得，
+$$
+Y=D^{-1}(Q-CX)\dots\dots(3)
+$$
 将$(3)$带入(1)并移项整理可得，
 $$
 X=(A-BD^{-1}C)^{-1}(P-BD^{-1}Q)\dots\dots(4)
