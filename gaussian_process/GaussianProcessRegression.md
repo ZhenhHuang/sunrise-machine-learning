@@ -33,8 +33,7 @@ $$
 
 设
 
-$$
-\begin{pmatrix}
+$$\begin{pmatrix}
     A&B\\
     C&D
 \end{pmatrix}
@@ -44,8 +43,7 @@ $$
 \end{pmatrix}=\begin{pmatrix}
     P\\
     Q
-\end{pmatrix}
-$$,
+\end{pmatrix}$$,
 
 可得
 $$
