@@ -13,7 +13,7 @@ class Gamma(RandomVariable):
     def pdf(self, X):
         return self.b ** self.a * X ** (self.a-1) * np.exp(-self.b * X) / gamma(self.a)
 
-    def sample(self, amount=100):
+    def sample(self, amount=1):
         return np.random.gamma(self.a, 1 / self.b, size=(amount,))
 
 

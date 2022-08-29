@@ -25,7 +25,10 @@ class RandomVariable:
     def pdf(self):
         pass
 
-    def sample(self):
+    def pmf(self):
+        pass
+
+    def sample(self, amount=1):
         pass
 
 

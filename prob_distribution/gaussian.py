@@ -5,7 +5,7 @@ from prob_distribution.gamma import Gamma
 
 class Gaussian(RandomVariable):
     """
-    Gaussian Distribution for single variable
+    Gaussian Distribution for univariate variable
     """
 
     def __init__(self, mean=None, var=None, prec=None):
@@ -18,6 +18,7 @@ class Gaussian(RandomVariable):
         self.mean = None
         self.var = None
         self.prec = None
+        self.ndim = 1
         if mean is not None:
             assert isinstance(mean, (float, np.number, Gaussian))
             self.mean = mean
@@ -58,7 +59,7 @@ class Gaussian(RandomVariable):
         dis = X - self.mean
         return np.exp(-0.5 * self.prec * dis ** 2) / np.sqrt(2 * np.pi * self.var)
 
-    def sample(self, amount: int):
+    def sample(self, amount: int = 1):
         return np.random.normal(self.mean, np.sqrt(self.var), size=(amount,))
 
     def bayes(self, X: np.ndarray):
@@ -77,7 +78,56 @@ class Gaussian(RandomVariable):
             raise TypeError
 
 
+class MultiGaussian(RandomVariable):
 
+    def __init__(self, mean=None, cov: np.ndarray = None, prec: np.ndarray = None):
+        super(MultiGaussian, self).__init__()
+        self.mean = mean
+        self.cov = cov
+        self.prec = prec
+        if self.mean is not None:
+            if isinstance(self.mean, np.ndarray):
+                self.parameter['mean'] = self.mean.flatten()
+                self.ndim = mean.shape[-1]
+            else:
+                raise RuntimeError('mean is not ndarray')
+        if self.cov is not None:
+            if isinstance(self.cov, np.ndarray) and cov.ndim == 2:
+                self.parameter['cov'] = self.cov
+                self.parameter['prec'] = np.linalg.inv(self.cov)
+                self.prec = self.parameter['prec']
+            else:
+                raise RuntimeError('input should be 2D-array')
+        elif self.prec is not None:
+            if isinstance(self.prec, np.ndarray):
+                assert prec.ndim == 2, 'input should be 2D-array'
+                self.parameter['prec'] = self.prec
+                self.parameter['cov'] = np.linalg.inv(self.prec)
+                self.cov = self.parameter['cov']
+            else:
+                raise RuntimeError('input should be 2D-array')
 
+    def fit(self, X):
+        if isinstance(X, np.ndarray):
+            self.ndim = X.shape[-1]
+            self.ml(X)
 
+    def ml(self, X):
+        assert X.ndim == 2
+        self.mean = np.mean(X, axis=0)
+        self.parameter['mean'] = self.mean
+        self.cov = np.cov(X, rowvar=False)
+        self.prec = np.linalg.inv(self.cov)
+        self.parameter['cov'] = self.cov
+        self.parameter['prec'] = self.prec
+
+    def pdf(self, X):
+        d = X - self.mean
+        return (
+                np.exp(-0.5 * np.sum(d @ self.prec * d, axis=-1))
+                * np.sqrt(np.linalg.det(self.prec))
+                / np.power(2 * np.pi, 0.5 * self.ndim))
+
+    def sample(self, amount=1):
+        return np.random.multivariate_normal(self.mean, self.cov, size=amount)
 

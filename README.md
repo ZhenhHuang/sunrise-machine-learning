@@ -1,15 +1,23 @@
-# sunrise-machine-learning-2022
+# Sunrise Lab Machine Learning
 
-## Deeplearning
+- [Sunrise Lab Machine Learning](#sunrise-lab-machine-learning)
+  - [Introduction](#introduction)
+  - [Get Started](#get-started)
+## Introduction
+We implement several machine learning algorithms as follows:
 
-### 3-13 example code
+1. [KNN](./knn/)
+2. [Linear models for regression](./linear_model_for_regression/)
+3. [Linear models for classification](./linear_model_for_classification/)
+4. [Naive Bayes](./Naive%20Bayes/)
+5. [Probability distribution](./psrob_distribution/)
+6. [Mixture models](./mixture_model/)
+## Get Started
 
-open --> [deeplearing](./deeplearning/)
-
-**NOTE** 代码问题可以新建issue进行提问
-
-### 3-24 GaussianProcessRegression
-
-open --> [GaussianProcessRegression](./gaussian_process/GaussianProcessRegression.md) 
-
-试一下
+```bash
+git clone https://github.com/H-Joker/sunrise-machine-learning-2022.git
+cd sunrise-machine-learning-2022
+conda create -n ml python=3.9.0
+conda activate ml
+pip install -r requirements.txt
+```

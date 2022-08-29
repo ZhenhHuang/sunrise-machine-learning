@@ -1,6 +1,6 @@
 import numpy as np
 from linear_model_for_classification.label_encoder import one_hot_decoder, one_hot_encoder
-from cluster_model import KMeans
+from mixture_model import KMeans
 from scipy.stats import multivariate_normal
 
 
