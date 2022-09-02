@@ -40,6 +40,34 @@ class FisherLinearDiscriminant:
         return (x @ self.w > self.threshold).astype(int)
 
 
+class MultiFisherLinearDiscriminant:
+    def __init__(self, W=None, threshold=None, n_classes=3):
+        self.W = W
+        self.threshold = threshold
+        self.n_classes = n_classes
+        
+    def fit(self, x_train: np.ndarray, y_train: np.ndarray):
+        cov_b = []  # between
+        cov_w = []  # within
+        mean = []
+        mu = x_train.mean(0, keepdims=True) # 1 D
+        for k in range(self.n_classes):
+            x_k = x_train[y_train == k] # N_k D
+            mean_k = np.mean(x_k, axis=0, keepdims=True)  # 1 D
+            mean.append(mean_k)
+            dist = x_k[:, None, :] - mean_k[:, :, None]  # N_K D D
+            cov_k = np.einsum('nde,nde->ed', dist, dist)
+            cov_w.append(cov_k)
+            dist = mean_k - mu
+            cov_k = (y_train == k).sum() * dist * dist.T
+            cov_b.append(cov_k)
+        cov_b = np.sum(cov_b, 0)    # D D 
+        cov_w = np.sum(cov_w, 0)
+        A = np.linalg.inv(cov_w) @ cov_w
+        _, vectors = np.linalg.eig(A)
+        self.W = vectors[:, -(self.n_classes-1):]
+            
+
 
 
 
