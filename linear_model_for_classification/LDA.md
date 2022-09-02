@@ -169,6 +169,11 @@ $$
 注意，这里$\bold{S}_W^{-1} \bold{S}_B$是我们可以通过观测到的样本计算出来的，所以特征值是确定的$\mu_i, i=1,...,D$,式4.10给出了与目标函数之间的关系，并且由正交变换的不变性，我们可得知$\bold{W}$就是由$\bold{S}_W^{-1} \bold{S}_B$最大的$K-1$个特征值对应的特征向量构成的。
 
 ## 代码实现
+
+![2分类](./../linear_model_for_classification/output1.png)
+![2分类投影](./../linear_model_for_classification/output2.png)
+![3分类](./../linear_model_for_classification/output3.png)
+
 ```python
 # 二分类
 class FisherLinearDiscriminant:
@@ -209,31 +214,65 @@ class FisherLinearDiscriminant:
 
 
 class MultiFisherLinearDiscriminant:
-    def __init__(self, W=None, threshold=None, n_classes=3):
+    """
+    For K >= 2
+    """
+    def __init__(self, W=None, threshold=None, n_classes=3, peaks: Iterable = None):
         self.W = W
         self.threshold = threshold
         self.n_classes = n_classes
-        
+        self.peaks = peaks or [2] * n_classes
+        assert len(self.peaks) == self.n_classes, "peaks shape error"
+
     def fit(self, x_train: np.ndarray, y_train: np.ndarray):
         cov_b = []  # between
         cov_w = []  # within
         mean = []
-        mu = x_train.mean(0, keepdims=True) # 1 D
+        mu = x_train.mean(0, keepdims=True)  # 1 D
         for k in range(self.n_classes):
-            x_k = x_train[y_train == k] # N_k D
+            x_k = x_train[y_train == k]  # N_k D
             mean_k = np.mean(x_k, axis=0, keepdims=True)  # 1 D
             mean.append(mean_k)
-            dist = x_k[:, None, :] - mean_k[:, :, None]  # N_K D D
-            cov_k = np.einsum('nde,nde->ed', dist, dist)
+            dist = x_k - mean_k  # N_K D
+            cov_k = dist.T @ dist
             cov_w.append(cov_k)
             dist = mean_k - mu
-            cov_k = (y_train == k).sum() * dist * dist.T
+            cov_k = (y_train == k).sum() * dist.T @ dist
             cov_b.append(cov_k)
-        cov_b = np.sum(cov_b, 0)    # D D 
+        self.mean = np.concatenate(mean, axis=0)
+        cov_b = np.sum(cov_b, 0)  # D D
         cov_w = np.sum(cov_w, 0)
-        A = np.linalg.inv(cov_w) @ cov_w
+        A = np.linalg.inv(cov_w) @ cov_b
         _, vectors = np.linalg.eig(A)
-        self.W = vectors[:, -(self.n_classes-1):]
+        self.W = vectors[:, -(self.n_classes - 1):]  # D, K-1
+        x_prj = x_train @ self.W
+        self.__getDistributions(x_prj, y_train)
+
+    def __getDistributions(self, x_train, y_train):
+        distributions = []
+        for k in range(self.n_classes):
+            x_k = x_train[y_train == k]  # N_k D
+            gmm = GaussianMixture(classes=self.peaks[k]) if self.peaks[k] > 1 else Gaussian()
+            gmm.fit(x_k)
+            distributions.append(gmm)
+        self.distributions = distributions
+
+    def project(self, x: np.ndarray):
+        assert x.ndim <= 2, "ndim should be less than 3"
+        if x.ndim == 1:
+            x = x[None, :]
+        return x @ self.W  # N, K-1
+
+    def classify(self, x: np.ndarray):
+        assert x.ndim <= 2, "ndim should be less than 3"
+        probs = []
+        if x.ndim == 1:
+            x = x[None, :]
+        x = self.project(x)
+        for i in range(x.shape[0]):
+            probs.append(np.concatenate([gmm._pdf(x[i]) for gmm in self.distributions]))
+        classes = np.argmax(probs, axis=-1)
+        return classes
 ```
 
 ```python
@@ -289,8 +328,6 @@ plt.legend()
 plt.show()
 ```
 
-![](./../linear_model_for_classification/output1.png)
-![](./../linear_model_for_classification/output2.png)
 
 ## 后记
 有些地方还没整明白，明白了再回来补充.

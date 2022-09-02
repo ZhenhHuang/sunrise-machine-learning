@@ -1,6 +1,6 @@
 import numpy as np
 from linear_model_for_classification.label_encoder import one_hot_decoder, one_hot_encoder
-from mixture_model import KMeans
+from mixture_model.kmeans import KMeans
 from scipy.stats import multivariate_normal
 
 
@@ -12,7 +12,7 @@ class GaussianMixture:
         self.iter_coefs = []
         self.iter_classes = []
 
-    def fit(self, X, iters: int = 20, one_hot=False):
+    def fit(self, X, iters: int = 20):
         means, covs, coefs = self._init_params(X, iters)
         self.means = means
         self.covs = covs
@@ -43,11 +43,16 @@ class GaussianMixture:
 
     def _init_params(self, X, iters: int = 20):
         kmeans = KMeans(self.classes)
-        latents, means = kmeans.fit(X, iters, one_hot=True)
-        classes = one_hot_decoder(latents)
+        means, latents = kmeans.fit(X, iters)
+        classes = latents
         covs = []
         for i in range(self.classes):
-            cov = np.cov(X[classes == i], rowvar=False)[None, :, :]
+            assert X.ndim == 2
+            cov = np.cov(X[classes == i], rowvar=False)
+            if X.shape[1] == 1:
+                cov = cov[None, None, None]
+            else:
+                cov = cov[None, :, :]
             covs.append(cov)
         covs = np.concatenate(covs, axis=0)
         coefs = latents.sum(axis=0)
@@ -56,7 +61,11 @@ class GaussianMixture:
     def __getpdf(self, X):
         pdfs = []
         for i in range(self.classes):
-            pdf = multivariate_normal.pdf(X, self.means[i], self.covs[i])[:, None]
+            pdf = multivariate_normal.pdf(X, self.means[i], self.covs[i])
+            if pdf.ndim > 0:
+                pdf = pdf[:, None]
+            else:
+                pdf = pdf[None, None]
             pdfs.append(pdf)
         pdfs = np.concatenate(pdfs, axis=-1)
         return pdfs

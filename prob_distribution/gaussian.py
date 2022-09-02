@@ -55,6 +55,9 @@ class Gaussian(RandomVariable):
         self.parameter['var'] = self.var
         self.parameter['prec'] = self.prec
 
+    def _pdf(self, X):
+        return self.pdf(X)
+
     def pdf(self, X):
         dis = X - self.mean
         return np.exp(-0.5 * self.prec * dis ** 2) / np.sqrt(2 * np.pi * self.var)
