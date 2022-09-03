@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import norm
 from prob_distribution.gaussian import Gaussian
-from mixture_model.gaussian_mixture import *
+from mixture_model.gaussian_mixture import GaussianMixture
 from typing import Iterable
 
 
