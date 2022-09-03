@@ -63,7 +63,7 @@ $$
 
 其中
 $$
-\bold{m}_k = \frac{1}{N}\sum_{n=1}^N\bold{x}_n = \frac{1}{N}\sum_{k=1}^{K}N_k\bold{m}_k \cdots\cdots (2.5)
+\bold{m} = \frac{1}{N}\sum_{n=1}^N\bold{x}_n = \frac{1}{N}\sum_{k=1}^{K}N_k\bold{m}_k \cdots\cdots (2.5)
 $$
 
 可得混合散度矩阵(the mixture scatter matrix)
