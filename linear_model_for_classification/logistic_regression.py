@@ -23,7 +23,7 @@ class LogisticRegression:
             R = np.diag(y*(1-y))
             H = x_train.T @ R @ x_train
             grad = x_train.T @ (y - t)
-            self.w = w_old - np.linalg.inv(H) @ grad
+            self.w = w_old - np.linalg.pinv(H) @ grad
             if np.allclose(self.w, w_old):
                 break
 
