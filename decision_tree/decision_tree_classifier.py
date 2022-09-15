@@ -53,7 +53,6 @@ class DecisionTreeClassifier:
     
     def predict(self, x):
         feat_map = {k: v for v, k in enumerate(self.feat_label)}
-        tree = self.tree.copy()
         result = []
         
         def DSF(x, tree):
