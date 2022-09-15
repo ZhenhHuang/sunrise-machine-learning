@@ -1,3 +1,4 @@
+from textwrap import indent
 import numpy as np
 from collections import Counter
 from utils import calc_Entropy, Calc_ConditonEntropy
@@ -32,7 +33,7 @@ class DecisionTreeClassifier:
     
     def _generateTree(self, X, y, feat_label):
         if np.unique(y, axis=0).shape[0] == 1:
-            return y[0]
+            return int(y[0])
         
         if X.shape[1] == 0 or np.unique(X, axis=0).shape[0] == 1:
             return self.get_best(y)
@@ -51,7 +52,24 @@ class DecisionTreeClassifier:
         return tree
     
     def predict(self, x):
-        pass
+        feat_map = {k: v for v, k in enumerate(self.feat_label)}
+        tree = self.tree.copy()
+        result = []
+        
+        def DSF(x, tree):
+            result = -1
+            if not isinstance(tree, dict):
+                return tree
+            for key, value in tree.items():
+                index = feat_map[key]
+                result = DSF(x, value[str(x[index])])
+                if isinstance(result, int):
+                    return result
+        
+        for i in range(len(x)):
+            result.append(DSF(x[i], self.tree))
+            
+        return np.array(result)
     
     def get_best(self, y):
         count_dict = Counter([l for l in y])
@@ -75,3 +93,4 @@ if __name__ == '__main__':
     cls = DecisionTreeClassifier()
     cls.fit(X, y)
     print(cls.tree)
+    print(cls.predict(X[1:]))
