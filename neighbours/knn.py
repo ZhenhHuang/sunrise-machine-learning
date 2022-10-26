@@ -90,14 +90,15 @@ class KNeighborsClassifier:
         def search_tree(x, node: KDNode, depth=0):
             if node is None:
                 return None, np.Inf
-            if node.left_child is None and node.left_child is None:
-                dist = np.sum((x-node.node_value['data'])**2)**0.5
-                return node, dist
+
             axis = depth % len(x)
             node_value = node.node_value['data']   # current node
+            dist = np.sum((x - node_value) ** 2) ** 0.5
+            if node.left_child is None and node.left_child is None:
+                return node, dist
             min_node, min_dist = search_tree(x, node.left_child, depth+1) if x[axis] < node_value[axis] else \
                 search_tree(x, node.right_child, depth+1)
-            dist = np.sum((x - node_value) ** 2) ** 0.5
+            
             if dist < min_dist:
                 # if dist < min_dist, then search another branch
                 min_node, min_dist = node, dist
