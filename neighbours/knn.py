@@ -1,60 +1,7 @@
 import numpy as np
+from kd_tree import KDNode, KDTree
 
 
-class KDNode:
-    def __init__(self, node_value=None, left_child=None, right_child=None):
-        self.node_value = node_value
-        self.left_child = left_child
-        self.right_child = right_child
-        
-    def __str__(self) -> str:
-        return str(self.node_value)
-
-
-class KDTree:
-    def __init__(self):
-        self.root = KDNode()
-        
-    def fit(self, X, y=None):
-        self.root = self._createTree(X, y)
-        return self
-
-    def _createTree(self, points: np.ndarray, labels=None, depth: int = 0):
-        if len(points) == 0:
-            return None
-        axis = depth % points.shape[-1]
-        index = np.argsort(points[:, axis])
-        points = points[index]     # sorted point and find median
-        median = len(points) // 2
-        value = {}
-        value['data'] = points[median]
-        l_labels, r_labels = None, None
-        if labels is not None:
-            labels = labels[index]
-            value['label'] = labels[median]
-            l_labels = labels[:median]
-            r_labels = labels[median+1:]
-        
-        return KDNode(
-            node_value=value,
-            left_child=self._createTree(points[:median], l_labels, depth+1),
-            right_child=self._createTree(points[median+1:], r_labels, depth+1)
-        )
-    
-    def __repr__(self) -> str:
-        def get_tree_dict(node: KDNode):
-            if node is None:
-                return None
-            if node.left_child is None and node.right_child is None:
-                return node.node_value
-            node_dict = {str(node):{}}
-            node_dict[str(node)]['l'] = get_tree_dict(node.left_child)
-            node_dict[str(node)]['r'] = get_tree_dict(node.right_child)
-            return node_dict
-        return str(get_tree_dict(self.root))
-
-    
-    
 class KNeighborsClassifier:
     def __init__(self, n_neighbors=5, algorithm='default'):
         """_summary_
@@ -87,6 +34,7 @@ class KNeighborsClassifier:
         self.tree = KDTree().fit(X, y)
     
     def __predict_kd_tree(self, X):
+        
         def search_tree(x, node: KDNode, depth=0):
             if node is None:
                 return None, np.Inf
@@ -96,17 +44,19 @@ class KNeighborsClassifier:
             dist = np.sum((x - node_value) ** 2) ** 0.5
             if node.left_child is None and node.left_child is None:
                 return node, dist
-            min_node, min_dist = search_tree(x, node.left_child, depth+1) if x[axis] < node_value[axis] else \
+            flag = x[axis] < node_value[axis]
+            min_node, min_dist = search_tree(x, node.left_child, depth+1) if flag else \
                 search_tree(x, node.right_child, depth+1)
             
             if dist < min_dist:
                 # if dist < min_dist, then search another branch
                 min_node, min_dist = node, dist
-                node, dist = search_tree(x, node.right_child, depth+1) if x[axis] < node_value[axis] else \
+                node, dist = search_tree(x, node.right_child, depth+1) if flag else \
                     search_tree(x, node.left_child, depth+1)
                 if dist < min_dist:
                      min_node, min_dist = node, dist
             return min_node, min_dist
+        
         results = []
         for i in range(X.shape[0]):
             results.append(search_tree(X[i], self.tree.root)[0].node_value['label'])
@@ -117,11 +67,11 @@ class KNeighborsClassifier:
         X.shape: M, D
         self.data.shape: N, D
         """
-        dist = (X[:, None, :] - self.data[None, :, :]) ** 2     # M, N, D
-        dist = dist.sum(axis=-1) ** 0.5
         classes = []
+        """Using for loop is faster and lower-cost than compute all distance at once"""
         for i in range(X.shape[0]):
-            index = np.argsort(dist[i])[: self.n_neighbors]
+            dist = ((X[i] - self.data) ** 2).sum(-1) ** 0.5
+            index = np.argsort(dist)[: self.n_neighbors]
             label = self.labels[index]
             count = np.zeros(self.n_classes)
             for j in range(self.n_neighbors):
@@ -149,5 +99,5 @@ if __name__ == '__main__':
     print(results)
     cost_naive = time.time() - time_now
     print(cost_naive)
-    print(cost_naive / cost_kd)
+    # print(cost_naive / cost_kd)
     
